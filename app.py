@@ -263,6 +263,52 @@ if uploaded_file is not None:
                     st.write("### Composición Actualizada")
                     st.dataframe(filtered_df[["Ingrediente", "Costo", energy_col, "PB", "Ca", "P", "Na", "Cl", "LYS", "MET"]])
 
+        # Adjust maximum inclusion limits section (only after initial optimization)
+        if st.session_state.diet and st.session_state.diet != {}:
+            with st.expander("Ajustar Límites de Inclusión Máxima"):
+                st.write("### Límites de Inclusión Actuales")
+                inclusion_df = filtered_df[["Ingrediente", "Max_Inclusion_Aves", "Max_Inclusion_Cerdos"]].copy()
+                st.dataframe(inclusion_df)
+
+                st.write("### Editar Límites de Inclusión Máxima")
+                editable_inclusion_columns = ["Ingrediente", "Max_Inclusion_Aves", "Max_Inclusion_Cerdos"]
+                with st.form(key=f"inclusion_form_{selected_species}_{selected_stage}"):
+                    edited_inclusion_df = st.data_editor(
+                        inclusion_df,
+                        column_config={
+                            "Ingrediente": st.column_config.TextColumn("Ingrediente", disabled=True),
+                            "Max_Inclusion_Aves": st.column_config.NumberColumn("Max Inclusión Aves (%)", min_value=0, max_value=100, step=1),
+                            "Max_Inclusion_Cerdos": st.column_config.NumberColumn("Max Inclusión Cerdos (%)", min_value=0, max_value=100, step=1)
+                        },
+                        disabled=["Ingrediente"],
+                        key=f"inclusion_editor_{selected_species}_{selected_stage}"
+                    )
+
+                    # Submit button for the form
+                    submitted_inclusion = st.form_submit_button("Guardar Cambios en Límites")
+                    if submitted_inclusion:
+                        # Apply the edited inclusion limits to the main DataFrame
+                        for col in ["Max_Inclusion_Aves", "Max_Inclusion_Cerdos"]:
+                            ingredients_df.loc[filtered_df.index, col] = edited_inclusion_df[col]
+                            st.session_state.ingredients_df.loc[filtered_df.index, col] = edited_inclusion_df[col]
+                            filtered_df.loc[:, col] = edited_inclusion_df[col]
+
+                        st.success("Límites de inclusión modificados. Recalculando la dieta...")
+
+                        # Re-run optimization with updated inclusion limits
+                        diet, total_cost, nutritional_values, compliance_data, recommendations = run_optimization(
+                            filtered_df, selected_species, selected_stage, req, energy_col, all_nutrients
+                        )
+                        st.session_state.diet = diet
+                        st.session_state.total_cost = total_cost
+                        st.session_state.nutritional_values = nutritional_values
+                        st.session_state.compliance_data = compliance_data
+                        st.session_state.recommendations = recommendations
+
+                        # Display the updated inclusion limits to confirm changes
+                        st.write("### Límites de Inclusión Actualizados")
+                        st.dataframe(filtered_df[["Ingrediente", "Max_Inclusion_Aves", "Max_Inclusion_Cerdos"]])
+
         # Display results
         if st.session_state.diet and st.session_state.diet != {}:
             st.subheader("Dieta Optimizada")
