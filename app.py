@@ -21,11 +21,11 @@ try:
     # Use columns to center the image
     col1, col2, col3 = st.columns([1, 2, 1])  # Create three columns, middle one wider
     with col2:  # Place the image in the middle column to center it
-        st.image("C:/Users/diego/Downloads/APP-NEGOCIO/nombre_archivo_logo.png", width=300)  # Increased width to 300
+        st.image("nombre_archivo_logo.png", width=300)  # Relative path, assuming the image is in the same folder as app.py
 except Exception as e:
-    st.warning(f"No se pudo cargar la imagen del logo: {str(e)}. Verifica la ruta del archivo.")
+    st.warning(f"No se pudo cargar la imagen del logo: {str(e)}. Verifica que el archivo 'nombre_archivo_logo.png' esté en la misma carpeta que app.py.")
 
-# Title of the app, now below the image
+# Title of the app, below the image
 st.title("Formulador de Dietas para Monogástricos")
 
 # File uploader for Excel file
